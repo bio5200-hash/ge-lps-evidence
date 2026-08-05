@@ -804,13 +804,23 @@ el("compf").addEventListener("click",e=>{
   [...el("compf").children].forEach(c=>c.setAttribute("aria-pressed", c===b));
   render();
 });
-catsel.addEventListener("change",e=>{clearInitialSafety();state.cat=e.target.value;render();});
+catsel.addEventListener("change",e=>{
+  initialSafety=false;
+  state.cat=e.target.value;
+  // 分野選択時はタグ絞り込みを解除（分野×タグの0件を防ぐ）
+  state.tags.clear();
+  [...el("tagf").children].forEach(c=>c.setAttribute("aria-pressed","false"));
+  render();
+});
 el("tagf").addEventListener("click",e=>{
   const b=e.target.closest("[data-tag]"); if(!b) return;
   initialSafety=false;
-  const t=b.dataset.tag, on=b.getAttribute("aria-pressed")==="true";
-  b.setAttribute("aria-pressed",String(!on));
-  if(on) state.tags.delete(t); else state.tags.add(t);
+  // タグは単一選択。押すと分野を「すべて」に戻す（分野×タグ・タグ×タグの0件を防ぐ）
+  state.cat="all"; catsel.value="all";
+  const t=b.dataset.tag, was=state.tags.has(t);
+  state.tags.clear();
+  [...el("tagf").children].forEach(c=>c.setAttribute("aria-pressed","false"));
+  if(!was){ state.tags.add(t); b.setAttribute("aria-pressed","true"); }
   render();
 });
 
